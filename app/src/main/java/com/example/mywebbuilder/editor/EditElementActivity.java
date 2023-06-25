@@ -1,11 +1,13 @@
 package com.example.mywebbuilder.editor;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Pair;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -13,19 +15,34 @@ import android.widget.Toast;
 
 import com.example.mywebbuilder.databinding.ActivityEditElementBinding;
 import com.example.mywebbuilder.models.ComponentModel;
+import com.example.mywebbuilder.models.ElementStyles;
 import com.example.mywebbuilder.utils.StorageUtil;
+import com.example.mywebbuilder.utils.StringUtil;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 public class EditElementActivity extends AppCompatActivity {
     ActivityEditElementBinding binding;
+    ArrayList<Pair<String, String>> filteredStyleList = new ArrayList<>();
     public String projectName, projectID, projectPath;
     ComponentModel editComponent;
+    ElementPropertyAdapter propertyAdapter;
     List<ComponentModel> editorList;
+    HashMap<String, String> editedCss;
+    HashMap<String, String> editedHtml;
     int editPosition = 0;
+    String currentElementId = null;
+    String currentElementTagName = "";
+    String currentElementClassName = "";
 
-    @SuppressLint({"SetJavaScriptEnabled", "SetTextI18n"})
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,7 +57,17 @@ public class EditElementActivity extends AppCompatActivity {
         editorList = new StorageUtil(this).getHierarchy(projectName);
         editComponent = editorList.get(editPosition);
         binding.titleTv.setText("Edit " + editComponent.getName());
+        filteredStyleList = new ArrayList<>();
+        editedCss = new HashMap<>();
+        editedHtml = new HashMap<>();
 
+        setUpWebView();
+        binding.backBtn.setOnClickListener(v -> onBackPressed());
+        binding.saveBtn.setOnClickListener(v -> Toast.makeText(EditElementActivity.this, ""+ editedCss, Toast.LENGTH_SHORT).show());
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private void setUpWebView() {
         binding.editWebView.getSettings().setJavaScriptEnabled(true);
         binding.editWebView.getSettings().setAllowFileAccess(true);
         binding.editWebView.getSettings().setAllowFileAccessFromFileURLs(true);
@@ -55,43 +82,74 @@ public class EditElementActivity extends AppCompatActivity {
                         "for (var i = 0; i < elements.length; i++) {" +
                         "    elements[i].addEventListener('click', function(event) {" +
                         "        event.stopPropagation();" +
+                        "        var tagName = this.tagName;" +
+                        "        var id = this.id;" +
+                        "        var className = this.className;" +
+                        "        var computedStyle = window.getComputedStyle(this);" +
+                        "        var style = {};" +
+                        "        var htmlProp = {};" +
+                        "        htmlProp['innerText'] = this.innerText;" +
+                        "        htmlProp['href'] = this.href;" +
+                        "        htmlProp['src'] = this.src;" +
+                        "        for (var j = 0; j < computedStyle.length; j++) {" +
+                        "            var property = computedStyle[j];" +
+                        "            var value = computedStyle.getPropertyValue(property);" +
+                        "            if (value !== '' && value !== 'none') {" +
+                        "                style[property] = value;" +
+                        "            }" +
+                        "        }" +
                         "        var elementInfo = {" +
-                        "            'tagName': this.tagName," +
-                        "            'className': this.className," +
-                        "            'innerText': this.innerText," +
-                        "            'src': this.src," +
-                        "            'href': this.href" +
+                        "            'tagName': tagName," +
+                        "            'className': className," +
+                        "            'id': id," +
+                        "            'style': style," +
+                        "            'htmlProp': htmlProp" +
                         "        };" +
                         "        Android.onClick(JSON.stringify(elementInfo));" +
                         "    });" +
                         "}" +
                         "})()");
+                if (currentElementId != null) highlightSelectedElement(currentElementId);
             }
         });
         binding.editWebView.loadUrl(editComponent.getPreviewUrl());
     }
 
-    void highlightSelectedElement(JSONObject elementInfo) {
+    private void setUpRecyclerview() {
+        binding.propRv.setLayoutManager(new LinearLayoutManager(this));
+        propertyAdapter = new ElementPropertyAdapter(this, filteredStyleList);
+        binding.propRv.setAdapter(propertyAdapter);
+    }
+
+    public void setEditedCssProperties(Pair<String, String > property){
+        if(filteredStyleList.contains(property) && editedCss.containsKey(property.first)){
+            editedCss.remove(property.first);
+        }
+        else if(!filteredStyleList.contains(property)){
+            editedCss.put(property.first, property.second);
+        }
+        updateElementCssProperty(StringUtil.convertToCamelCase(property.first), property.second);
+    }
+
+    public void setEditedHtmlProperties(Pair<String, String > property){
+        if(filteredStyleList.contains(property) && editedHtml.containsKey(property.first)){
+            editedHtml.remove(property.first);
+        }
+        else if(!filteredStyleList.contains(property)){
+            editedHtml.put(property.first, property.second);
+        }
+        if(property.first.equals("innerText")){
+            updateElementInnerText(property.second);
+        }
+        else updateElementHtmlProperty(property.first, property.second);
+    }
+
+    void highlightSelectedElement(String elementId) {
         try {
-            StringBuilder javascriptCode = new StringBuilder("var elements = document.getElementsByTagName('*');" +
-                    "for (var i = 0; i < elements.length; i++) {" +
-                    "    var element = elements[i]; " +
-                    "if (");
-            String[] selectors = {"tagName", "className", "innerText", "href", "src"};
-
-            for (String selector : selectors) {
-                if (elementInfo.get("tagName").equals("DIV")
-                        && !selector.equals("className") && !selector.equals("DIV")) {
-                    continue;
-                }
-                if (elementInfo.has(selector)) {
-                    String selectorValue = elementInfo.getString(selector);
-                    javascriptCode.append("element.").append(selector).append(" === '").append(selectorValue).append("' && ");
-                }
-            }
-            javascriptCode = new StringBuilder(javascriptCode.substring(0, javascriptCode.length() - 3));
-            javascriptCode.append(")" + "{ element.classList.add('highlighted');" + "break;" + " }" + "}");
-
+            String javascriptCode = "var element = document.getElementById('" + elementId + "');" +
+                    "if (element) {" +
+                    "    element.classList.add('highlighted');" +
+                    "}";
             binding.editWebView.loadUrl("javascript:(function() { " + javascriptCode + " })();");
         } catch (Exception e) {
             e.printStackTrace();
@@ -122,6 +180,101 @@ public class EditElementActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint({"NotifyDataSetChanged", "SetTextI18n"})
+    void filterStyle(JSONObject elementInfo) {
+        filteredStyleList = new ArrayList<>();
+        if (elementInfo == null) {
+            return;
+        }
+        try {
+            JSONObject styleObject = elementInfo.getJSONObject("style");
+            JSONObject htmlProp = elementInfo.getJSONObject("htmlProp");
+
+            String tagName = elementInfo.getString("tagName").toLowerCase(Locale.ROOT);
+
+            if ((tagName.equals("p") || tagName.equals("li") || tagName.startsWith("h")) && htmlProp.has("innerText")) {
+                Pair<String, String> propertyPair = new Pair<>("innerText", htmlProp.getString("innerText"));
+                filteredStyleList.add(propertyPair);
+            }
+            if (tagName.equals("img") && htmlProp.has("src")) {
+                Pair<String, String> propertyPair = new Pair<>("src", htmlProp.getString("src"));
+                filteredStyleList.add(propertyPair);
+            }
+            if (tagName.equals("a") || tagName.startsWith("li")) {
+                Pair<String, String> propertyPair;
+                if (htmlProp.has("href"))
+                    propertyPair = new Pair<>("href", htmlProp.getString("href"));
+                else propertyPair = new Pair<>("href", "");
+                filteredStyleList.add(propertyPair);
+            }
+
+            Iterator<String> styleKeys = styleObject.keys();
+            ArrayList<String> allowedProperties = ElementStyles.allowedProperties;
+
+            while (styleKeys.hasNext()) {
+                String property = styleKeys.next();
+
+                int index = allowedProperties.indexOf(property);
+                if (index != -1) {
+                    String value = null;
+                    try {
+                        value = styleObject.getString(property);
+                    } catch (JSONException e) {
+                        continue;
+                    }
+                    Pair<String, String> propertyPair = new Pair<>(property, value);
+                    filteredStyleList.add(propertyPair);
+                }
+            }
+            binding.elementTitle.setText("</" + currentElementTagName + "> ");
+            setUpRecyclerview();
+        } catch (Exception e) {
+            Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateElementCssProperty(String propertyName, String propertyValue) {
+        try {
+            String javascriptCode = "var element = document.getElementById('" + currentElementId + "');" +
+                    "if (element) {" +
+                    "    element.style." + propertyName + " = '" + propertyValue + "';" +
+                    "}";
+            binding.editWebView.loadUrl("javascript:(function() { " + javascriptCode + " })();");
+        } catch (Exception e) {
+            Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+
+    private void updateElementHtmlProperty(String propertyName, String propertyValue) {
+        try {
+            String javascriptCode = "var element = document.getElementById('" + currentElementId + "');" +
+                    "if (element) {" +
+                    "    element.setAttribute('" + propertyName + "', '" + propertyValue + "');" +
+                    "}";
+            binding.editWebView.loadUrl("javascript:(function() { " + javascriptCode + " })();");
+        } catch (Exception e) {
+            Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+
+    private void updateElementInnerText(String innerText) {
+        try {
+            String javascriptCode = "var element = document.getElementById('" + currentElementId + "');" +
+                    "if (element) {" +
+                    "    element.textContent = '" + innerText + "';" +
+                    "}";
+            binding.editWebView.loadUrl("javascript:(function() { " + javascriptCode + " })();");
+        } catch (Exception e) {
+            Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+
+
+
+
     public class MyJavaScriptInterface {
         @JavascriptInterface
         public void onClick(String elementInfoJson) {
@@ -130,8 +283,20 @@ public class EditElementActivity extends AppCompatActivity {
                 Activity activity = EditElementActivity.this;
                 activity.runOnUiThread(() -> {
                     removeHighlight();
-                    highlightSelectedElement(elementInfo);
-                    binding.elementTv.setText(elementInfoJson);
+                    try {
+                        currentElementId = elementInfo.getString("id");
+                        currentElementTagName = elementInfo.getString("tagName").toLowerCase(Locale.ROOT);
+                        currentElementClassName = elementInfo.getString("className");
+                        highlightSelectedElement(currentElementId);
+                        editedCss = new HashMap<>();
+                        editedHtml = new HashMap<>();
+                    } catch (JSONException e) {
+                        currentElementId = null;
+                        e.printStackTrace();
+                    }
+                    if (elementInfo.has("style")) {
+                        filterStyle(elementInfo);
+                    }
                 });
             } catch (Exception e) {
                 Toast.makeText(EditElementActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
@@ -139,4 +304,5 @@ public class EditElementActivity extends AppCompatActivity {
             }
         }
     }
+
 }

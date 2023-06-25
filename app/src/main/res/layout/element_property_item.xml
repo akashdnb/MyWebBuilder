@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="@dimen/_8sdp"
+    android:layout_margin="@dimen/_4sdp">
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/_2sdp"
+        android:background="@color/blue_secondary"
+        android:paddingHorizontal="@dimen/_8sdp"
+        android:weightSum="5">
+
+        <TextView
+            android:id="@+id/property_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="property"
+            android:layout_gravity="center_vertical"
+            android:textSize="@dimen/_14ssp"
+            android:paddingVertical="@dimen/_4sdp"
+            android:paddingHorizontal="@dimen/_8sdp"
+            android:layout_weight="2"/>
+
+        <EditText
+            android:id="@+id/value_et"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/_14ssp"
+            android:padding="@dimen/_4sdp"
+            android:layout_gravity="start"
+            android:gravity="start"
+            android:text="value"
+            android:layout_weight="3" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+
+
+</com.google.android.material.card.MaterialCardView>
