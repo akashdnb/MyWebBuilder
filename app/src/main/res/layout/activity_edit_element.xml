@@ -38,57 +38,33 @@
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
-    <ScrollView
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/form_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
+        android:weightSum="2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_bar">
-
-        <androidx.appcompat.widget.LinearLayoutCompat
-            android:id="@+id/form_container"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-
-        </androidx.appcompat.widget.LinearLayoutCompat>
-
-    </ScrollView>
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/bottom_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingVertical="@dimen/_4sdp"
-        app:cardElevation="@dimen/_8sdp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <androidx.appcompat.widget.LinearLayoutCompat
+        <WebView
+            android:id="@+id/edit_web_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="end">
+            android:layout_weight="1"/>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/save_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="save"
-                android:drawablePadding="@dimen/_12sdp"
-                android:drawableTint="@color/white"
-                android:textSize="@dimen/_14ssp"
-                app:cornerRadius="@dimen/_12sdp"
-                android:layout_marginEnd="@dimen/_16sdp"
-                android:paddingVertical="@dimen/_8sdp"
-                android:paddingHorizontal="@dimen/_22sdp"
-                android:layout_gravity="center_vertical" />
+        <TextView
+            android:id="@+id/element_tv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="element"
+            android:textSize="@dimen/_18ssp"
+            android:layout_weight="1"/>
 
-        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
-
-    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

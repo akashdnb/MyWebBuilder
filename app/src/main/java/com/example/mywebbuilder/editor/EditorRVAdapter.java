@@ -47,8 +47,6 @@ public class EditorRVAdapter extends RecyclerView.Adapter<EditorRVAdapter.ViewHo
     @SuppressLint({"SetJavaScriptEnabled", "NotifyDataSetChanged", "ClickableViewAccessibility"})
     @Override
     public void onBindViewHolder(@NonNull EditorRVAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
-//        Glide.with(context).load(list.get(position).getImageUrl()).into(holder.imageView);
-//        webSettings.setJavaScriptEnabled(true);
         holder.webView.getSettings().setAllowFileAccess(true);
         holder.webView.getSettings().setAllowFileAccessFromFileURLs(true);
         holder.webView.setWebViewClient(new WebViewClient(){

@@ -26,8 +26,37 @@ public class DirectoryUtil {
             rootProjectsData.mkdirs();
     }
 
+    public static boolean createFile(String filePath) {
+        File file = new File(filePath);
+        if (file.exists()) return true;
+        File parentDir = file.getParentFile();
+
+        if (parentDir != null && !parentDir.exists()) {
+            boolean created = parentDir.mkdirs();
+            if (!created) {
+                return false;
+            }
+        }
+        try {
+            return file.createNewFile();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean deleteFile(String filePath) {
+        File file = new File(filePath);
+
+        if (file.exists()) {
+            boolean deleted = file.delete();
+            return deleted;
+        } else {
+            return false;
+        }
+    }
+
     private static File rootDir(){
-        File dir = null;
+        File dir;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
         {
             dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + "MyWebBuilder");
@@ -40,7 +69,7 @@ public class DirectoryUtil {
     }
 
     private static File rootAssets(){
-        File dir = null;
+        File dir;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
         {
             dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + "MyWebBuilder/.assets");
@@ -53,7 +82,7 @@ public class DirectoryUtil {
     }
 
     private static File rootProjects(){
-        File dir = null;
+        File dir;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
         {
             dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + "MyWebBuilder/projects");
@@ -66,7 +95,7 @@ public class DirectoryUtil {
     }
 
     private static File rootProjectsData(){
-        File dir = null;
+        File dir;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
         {
             dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + "MyWebBuilder/.projectsData");

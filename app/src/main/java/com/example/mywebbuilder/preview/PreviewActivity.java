@@ -72,8 +72,8 @@ public class PreviewActivity extends AppCompatActivity {
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 super.onReceivedError(view, request, error);
                 binding.progressBar.setVisibility(View.GONE);
-                binding.webView.setVisibility(View.GONE);
                 if(isHTTPUrl){
+                    binding.webView.setVisibility(View.GONE);
                     binding.noConnLottie.setVisibility(View.VISIBLE);
                 }
             }

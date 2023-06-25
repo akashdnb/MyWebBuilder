@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -32,10 +33,10 @@ import com.example.mywebbuilder.R;
 import com.example.mywebbuilder.broadcastReceivers.NetworkChangeListener;
 import com.example.mywebbuilder.broadcastReceivers.NetworkChangeReceiver;
 import com.example.mywebbuilder.databinding.ActivityEditorBinding;
-import com.example.mywebbuilder.databinding.EditComponentBottomSheetBinding;
 import com.example.mywebbuilder.jsoupUtils.HTMLUtils;
 import com.example.mywebbuilder.models.ComponentModel;
 import com.example.mywebbuilder.preview.PreviewActivity;
+import com.example.mywebbuilder.utils.DirectoryUtil;
 import com.example.mywebbuilder.utils.KeyGenerator;
 import com.example.mywebbuilder.utils.StorageUtil;
 import com.google.firebase.database.DataSnapshot;
@@ -45,7 +46,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,12 +67,12 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
     FirebaseDatabase database;
     DatabaseReference componentsRef;
     DatabaseReference typesRef;
-    private Tooltip tooltip;
     EditorRVAdapter editorRVAdapter;
     ComponentAdapter componentAdapter;
     public String projectName, projectID, projectPath;
     HTMLUtils htmlUtils;
     public ArrayList<Integer> selectedList;
+    private ProgressDialog progressDialog;
 
     @SuppressLint("NotifyDataSetChanged")
     @Override
@@ -87,6 +87,7 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
         projectID = intent.getStringExtra("projectID");
         projectPath = intent.getStringExtra("projectPath");
         binding.titleTv.setText(projectName);
+        setupProgressDialog();
 
         if (isNetworkAvailable) setupActivity();
     }
@@ -104,6 +105,7 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
         componentModelList = new ArrayList<>();
 
         updateComponentList();
+        setUpEditorRV();
         addDragListener();
         handleClicks();
     }
@@ -147,8 +149,6 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
             builder.create().show();
         });
         binding.editSelected.setOnClickListener(v -> {
-//            EditComponentBottomSheet editComponent = new EditComponentBottomSheet(EditorActivity.this, editorList.get(0));
-//            editComponent.show();
             Intent intent = new Intent(EditorActivity.this, EditElementActivity.class);
             intent.putExtra("projectPath", projectPath);
             intent.putExtra("projectName", projectName);
@@ -212,6 +212,7 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
                 Toast.makeText(this, "" + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
+            DirectoryUtil.deleteFile(deleteItem.getPreviewUrl());
             editorList.remove(deleteItem);
         }
         new StorageUtil(this).setHierarchy(projectName, editorList);
@@ -240,6 +241,12 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
         updateSpinner();
     }
 
+    private void setupProgressDialog(){
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Adding Component...");
+        progressDialog.setCancelable(false);
+    }
+
     public void setProgressBarGone() {
         binding.progressBar.setVisibility(View.GONE);
     }
@@ -254,7 +261,7 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
                     componentModelList.add(component);
                 }
                 setUpComponentsRV();
-                setUpEditorRV();
+//                setUpEditorRV();
             }
 
             @Override
@@ -264,28 +271,32 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
     }
 
     public void addComponentToRecyclerView(ComponentModel component, int position) {
+        progressDialog.show();
         String componentID = KeyGenerator.generateKey();
         component.setElementId(componentID);
         String root = "root";
         if (position > 0) root = editorList.get(position - 1).getElementId();
 
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
         String finalRoot = root;
+        String componentPath = DirectoryUtil.rootProjectsData+"/"+projectName+"/"+component.getName()+"-"+componentID;
         executor.execute(() -> {
             try {
-                htmlUtils.LinkHTMLFile(component.getHtmlUrl(), finalRoot, componentID);
-                htmlUtils.linkStyle(component.getStyleUrl(), componentID);
-                htmlUtils.linkScript(component.getScriptUrl(), componentID);
+                htmlUtils.LinkHTMLFile(component.getHtmlUrl(), finalRoot, componentID, componentPath+".html");
+                htmlUtils.linkStyle(component.getStyleUrl(), componentID, componentPath+".css");
+                htmlUtils.linkScript(component.getScriptUrl(), componentID, componentPath+".js");
             } catch (Exception e) {
+                progressDialog.dismiss();
                 Toast.makeText(this, "err " + e, Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
             handler.post(() -> {
+                component.setPreviewUrl(componentPath+".html");
                 editorList.add(position, component);
                 editorRVAdapter.notifyItemInserted(position);
                 new StorageUtil(this).setHierarchy(projectName, editorList);
+                progressDialog.dismiss();
             });
         });
 
@@ -314,7 +325,7 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
     }
 
     private void setUpToolTip() {
-        tooltip = new Tooltip.Builder(this)
+        Tooltip tooltip = new Tooltip.Builder(this)
                 .anchor(binding.frameLayout, binding.frameLayout.getWidth(), 0, false)
                 .text("Long press to drag\n\n" +
                         "Click to preview")
@@ -407,7 +418,7 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
     @Override
     public void onNetworkDisconnected() {
         isNetworkAvailable = false;
-        binding.mainRv.setVisibility(View.GONE);
-        binding.noConnLottie.setVisibility(View.VISIBLE);
+//        binding.mainRv.setVisibility(View.GONE);
+//        binding.noConnLottie.setVisibility(View.VISIBLE);
     }
 }
