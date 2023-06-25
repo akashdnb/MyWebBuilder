@@ -14,6 +14,7 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.example.mywebbuilder.databinding.ActivityEditElementBinding;
+import com.example.mywebbuilder.jsoupUtils.ComponentEditor;
 import com.example.mywebbuilder.models.ComponentModel;
 import com.example.mywebbuilder.models.ElementStyles;
 import com.example.mywebbuilder.utils.StorageUtil;
@@ -63,7 +64,13 @@ public class EditElementActivity extends AppCompatActivity {
 
         setUpWebView();
         binding.backBtn.setOnClickListener(v -> onBackPressed());
-        binding.saveBtn.setOnClickListener(v -> Toast.makeText(EditElementActivity.this, ""+ editedCss, Toast.LENGTH_SHORT).show());
+        binding.saveBtn.setOnClickListener(v -> {
+            ComponentEditor.applyEditedCss(editedCss, currentElementId, editComponent.getPreviewUrl(), projectPath);
+            ComponentEditor.applyEditedHtml(editedHtml, currentElementId, editComponent.getPreviewUrl(), projectPath);
+            editedCss.clear();
+            editedHtml.clear();
+            binding.editWebView.reload();
+        });
     }
 
     @SuppressLint("SetJavaScriptEnabled")
