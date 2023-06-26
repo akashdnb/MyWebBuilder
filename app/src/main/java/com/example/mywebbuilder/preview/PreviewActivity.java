@@ -4,9 +4,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -18,8 +22,12 @@ import android.widget.Toast;
 
 import com.example.mywebbuilder.R;
 import com.example.mywebbuilder.databinding.ActivityPreviewBinding;
+import com.example.mywebbuilder.jsoupUtils.HtmlFileHelper;
+import com.example.mywebbuilder.utils.DirectoryUtil;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PreviewActivity extends AppCompatActivity {
     ActivityPreviewBinding binding;
@@ -99,13 +107,44 @@ public class PreviewActivity extends AppCompatActivity {
                         }
                         return true;
                     case R.id.save_file:
-                        Toast.makeText(PreviewActivity.this, "saved", Toast.LENGTH_SHORT).show();
+                        saveFile();
                         return true;
                 }
                 return false;
             });
             popupMenu.show();
         });
+
+    }
+
+    private void saveFile() {
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Saving Project...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        String targetCssPath = DirectoryUtil.rootProjects+"/"+projectName+"/style.css";
+        String targetHtmlPath = DirectoryUtil.rootProjects+"/"+projectName+"/index.html";
+        DirectoryUtil.deleteFile(targetCssPath);
+        DirectoryUtil.deleteFile(targetHtmlPath);
+        DirectoryUtil.createFile(targetCssPath);
+        DirectoryUtil.createFile(targetHtmlPath);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        try {
+            executor.execute(() -> {
+                HtmlFileHelper.extractStylesFromHtml(projectPath, targetHtmlPath, targetCssPath);
+                handler.post(() -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(PreviewActivity.this, "Project saved at " + targetHtmlPath, Toast.LENGTH_SHORT).show();
+                });
+            });
+        }catch (Exception e){
+            progressDialog.dismiss();
+            Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+        }
 
     }
 
