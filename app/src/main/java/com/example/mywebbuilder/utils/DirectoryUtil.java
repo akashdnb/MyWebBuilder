@@ -13,15 +13,17 @@ public class DirectoryUtil {
 
     public static File rootProjects= rootProjects();
 
+    public static File hiddenRootProjects = HiddenRootProjects();
+
     public static File rootProjectsData= rootProjectsData();
 
     public static void createFleFolder(){
         if(!rootDirMyWebBuilder.exists())
             rootDirMyWebBuilder.mkdirs();
-        if(!rootAssets.exists())
-            rootAssets.mkdirs();
         if(!rootProjects.exists())
             rootProjects.mkdirs();
+        if(!hiddenRootProjects.exists())
+            hiddenRootProjects.mkdirs();
         if(!rootProjectsData.exists())
             rootProjectsData.mkdirs();
     }
@@ -109,6 +111,19 @@ public class DirectoryUtil {
         else
         {
             dir = new File(Environment.getExternalStorageDirectory() + "/" + "MyWebBuilder/projects");
+        }
+        return dir;
+    }
+
+    private static File HiddenRootProjects(){
+        File dir;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+        {
+            dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + "MyWebBuilder/.rawProjects");
+        }
+        else
+        {
+            dir = new File(Environment.getExternalStorageDirectory() + "/" + "MyWebBuilder/.rawProjects");
         }
         return dir;
     }

@@ -86,7 +86,7 @@ public class DashboardActivity extends AppCompatActivity implements NetworkChang
         }
         String projectId = KeyGenerator.generateKey();
         String sourcePath = "https://akashjsr63.github.io/wb/index.html";
-        String targetPath = DirectoryUtil.rootProjects + "/" + projectName + "/index.html";
+        String targetPath = DirectoryUtil.hiddenRootProjects + "/" + projectName + "/index.html";
 
         if (!DirectoryUtil.createFile(targetPath)) {
             return;

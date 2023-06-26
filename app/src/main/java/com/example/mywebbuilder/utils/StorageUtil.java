@@ -16,7 +16,7 @@ public class StorageUtil {
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
     private final Context context;
-    private final String PROJECTS_KEY = "ygdahh_____projects";
+    private final String PROJECTS_KEY = "frsfgtrf33juhygtrkjhg456fr45u9";
 
     public StorageUtil(Context context) {
         this.context = context;
