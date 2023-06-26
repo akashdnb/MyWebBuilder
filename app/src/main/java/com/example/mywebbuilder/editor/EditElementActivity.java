@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class EditElementActivity extends AppCompatActivity {
     ActivityEditElementBinding binding;
@@ -36,8 +37,8 @@ public class EditElementActivity extends AppCompatActivity {
     ComponentModel editComponent;
     ElementPropertyAdapter propertyAdapter;
     List<ComponentModel> editorList;
-    HashMap<String, String> editedCss;
-    HashMap<String, String> editedHtml;
+    HashMap<String, HashMap<String, String>> editedCss;
+    HashMap<String, HashMap<String, String>> editedHtml;
     int editPosition = 0;
     String currentElementId = null;
     String currentElementTagName = "";
@@ -65,8 +66,8 @@ public class EditElementActivity extends AppCompatActivity {
         setUpWebView();
         binding.backBtn.setOnClickListener(v -> onBackPressed());
         binding.saveBtn.setOnClickListener(v -> {
-            ComponentEditor.applyEditedCss(editedCss, currentElementId, editComponent.getPreviewUrl(), projectPath);
-            ComponentEditor.applyEditedHtml(editedHtml, currentElementId, editComponent.getPreviewUrl(), projectPath);
+            ComponentEditor.applyEditedCss(editedCss, editComponent.getPreviewUrl(), projectPath);
+            ComponentEditor.applyEditedHtml(editedHtml, editComponent.getPreviewUrl(), projectPath);
             editedCss.clear();
             editedHtml.clear();
             binding.editWebView.reload();
@@ -129,21 +130,29 @@ public class EditElementActivity extends AppCompatActivity {
     }
 
     public void setEditedCssProperties(Pair<String, String > property){
-        if(filteredStyleList.contains(property) && editedCss.containsKey(property.first)){
-            editedCss.remove(property.first);
+        if(filteredStyleList.contains(property) && editedCss.containsKey(currentElementId) && Objects.requireNonNull(editedCss.get(currentElementId)).containsKey(property.first)){
+            Objects.requireNonNull(editedCss.get(currentElementId)).remove(property.first);
         }
         else if(!filteredStyleList.contains(property)){
-            editedCss.put(property.first, property.second);
+            if(!editedCss.containsKey(currentElementId)){
+                editedCss.put(currentElementId, new HashMap<>());
+            }
+            Objects.requireNonNull(editedCss.get(currentElementId)).put(property.first, property.second);
         }
+
         updateElementCssProperty(StringUtil.convertToCamelCase(property.first), property.second);
     }
 
     public void setEditedHtmlProperties(Pair<String, String > property){
-        if(filteredStyleList.contains(property) && editedHtml.containsKey(property.first)){
-            editedHtml.remove(property.first);
+        if(filteredStyleList.contains(property) && editedHtml.containsKey(currentElementId) && Objects.requireNonNull(editedHtml.get(currentElementId)).containsKey(property.first)){
+            Objects.requireNonNull(editedHtml.get(currentElementId)).remove(property.first);
         }
         else if(!filteredStyleList.contains(property)){
-            editedHtml.put(property.first, property.second);
+            if(!editedHtml.containsKey(currentElementId)){
+                editedHtml.put(currentElementId, new HashMap<>());
+            }
+            Objects.requireNonNull(editedHtml.get(currentElementId)).put(property.first, property.second);
+
         }
         if(property.first.equals("innerText")){
             updateElementInnerText(property.second);
@@ -223,7 +232,7 @@ public class EditElementActivity extends AppCompatActivity {
 
                 int index = allowedProperties.indexOf(property);
                 if (index != -1) {
-                    String value = null;
+                    String value;
                     try {
                         value = styleObject.getString(property);
                     } catch (JSONException e) {
@@ -295,8 +304,6 @@ public class EditElementActivity extends AppCompatActivity {
                         currentElementTagName = elementInfo.getString("tagName").toLowerCase(Locale.ROOT);
                         currentElementClassName = elementInfo.getString("className");
                         highlightSelectedElement(currentElementId);
-                        editedCss = new HashMap<>();
-                        editedHtml = new HashMap<>();
                     } catch (JSONException e) {
                         currentElementId = null;
                         e.printStackTrace();

@@ -13,7 +13,7 @@ import java.util.HashMap;
 public class ComponentEditor {
 
     public static void applyEditedCss(HashMap<String, String> editedCss, String elementId, String filePath, String projectPath) {
-        if(editedCss.isEmpty()) return;
+        if (editedCss.isEmpty()) return;
         try {
             File input = new File(filePath);
             Document doc = Jsoup.parse(input, "UTF-8");
@@ -47,7 +47,7 @@ public class ComponentEditor {
             writer.close();
 
             Element projectElement = projectDoc.getElementById(elementId);
-            if (projectElement != null){
+            if (projectElement != null) {
                 projectElement.replaceWith(element);
             }
 
@@ -63,7 +63,7 @@ public class ComponentEditor {
 
 
     public static void applyEditedHtml(HashMap<String, String> editedHtml, String elementId, String filePath, String projectPath) {
-        if(editedHtml.isEmpty()) return;
+        if (editedHtml.isEmpty()) return;
         try {
             File input = new File(filePath);
             Document doc = Jsoup.parse(input, "UTF-8");
@@ -89,7 +89,7 @@ public class ComponentEditor {
             writer.close();
 
             Element projectElement = projectDoc.getElementById(elementId);
-            if (projectElement != null){
+            if (projectElement != null) {
                 projectElement.replaceWith(element);
             }
 
@@ -102,6 +102,126 @@ public class ComponentEditor {
             e.printStackTrace();
         }
     }
+
+    public static void applyEditedCss(HashMap<String, HashMap<String, String>> editedCss, String filePath, String projectPath) {
+        if (editedCss.isEmpty()) {
+            return;
+        }
+        try {
+            File input = new File(filePath);
+            Document doc = Jsoup.parse(input, "UTF-8");
+
+            File projectFile = new File(projectPath);
+            Document projectDoc = Jsoup.parse(projectFile, "UTF-8");
+
+            for (String elementId : editedCss.keySet()) {
+                HashMap<String, String> cssProperties = editedCss.get(elementId);
+
+                Element element = doc.getElementById(elementId);
+                if (element != null) {
+                    String existingStyle = element.attr("style");
+                    StringBuilder updatedStyleBuilder = new StringBuilder(existingStyle);
+
+                    for (String property : cssProperties.keySet()) {
+                        String value = cssProperties.get(property);
+                        String cssProperty = property.trim() + ": " + value.trim();
+
+                        if (existingStyle.contains(property + ":")) {
+                            updatedStyleBuilder = new StringBuilder(updatedStyleBuilder.toString().replaceAll(property + ":.*?;", cssProperty + ";"));
+                        } else {
+                            updatedStyleBuilder.append(cssProperty).append("; ");
+                        }
+                    }
+
+                    String updatedStyle = updatedStyleBuilder.toString().trim();
+                    element.attr("style", updatedStyle);
+                }
+
+                Element projectElement = projectDoc.getElementById(elementId);
+                if (projectElement != null) {
+                    String existingStyle = projectElement.attr("style");
+                    StringBuilder updatedStyleBuilder = new StringBuilder(existingStyle);
+
+                    for (String property : cssProperties.keySet()) {
+                        String value = cssProperties.get(property);
+                        String cssProperty = property.trim() + ": " + value.trim();
+
+                        if (existingStyle.contains(property + ":")) {
+                            updatedStyleBuilder = new StringBuilder(updatedStyleBuilder.toString().replaceAll(property + ":.*?;", cssProperty + ";"));
+                        } else {
+                            updatedStyleBuilder.append(cssProperty).append("; ");
+                        }
+                    }
+
+                    String updatedStyle = updatedStyleBuilder.toString().trim();
+                    projectElement.attr("style", updatedStyle);
+                }
+            }
+
+            FileWriter writer = new FileWriter(filePath);
+            writer.write(doc.outerHtml());
+            writer.close();
+
+            writer = new FileWriter(projectPath);
+            writer.write(projectDoc.outerHtml());
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void applyEditedHtml(HashMap<String, HashMap<String, String>> editedCss, String filePath, String projectPath) {
+        if (editedCss.isEmpty()) {
+            return;
+        }
+        try {
+            File input = new File(filePath);
+            Document doc = Jsoup.parse(input, "UTF-8");
+
+            File projectFile = new File(projectPath);
+            Document projectDoc = Jsoup.parse(projectFile, "UTF-8");
+
+            for (String elementId : editedCss.keySet()) {
+                HashMap<String, String> cssProperties = editedCss.get(elementId);
+
+                Element element = doc.getElementById(elementId);
+                if (element != null && cssProperties != null) {
+                    for (String attribute : cssProperties.keySet()) {
+                        String value = cssProperties.get(attribute);
+                        if (attribute.equals("innerText") && value != null) {
+                            element.text(value);
+                        } else if (value != null) {
+                            element.attr(attribute, value);
+                        }
+                    }
+                }
+
+                Element projectElement = projectDoc.getElementById(elementId);
+                if (projectElement != null && cssProperties != null) {
+                    for (String attribute : cssProperties.keySet()) {
+                        String value = cssProperties.get(attribute);
+                        if (attribute.equals("innerText") && value != null) {
+                            projectElement.text(value);
+                        } else if (value != null) {
+                            projectElement.attr(attribute, value);
+                        }
+                    }
+                }
+            }
+
+            FileWriter writer = new FileWriter(filePath);
+            writer.write(doc.outerHtml());
+            writer.close();
+
+            writer = new FileWriter(projectPath);
+            writer.write(projectDoc.outerHtml());
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private static String mergeStyles(String existingStyle, String property, String value) {
         // Split the existing style into individual properties
