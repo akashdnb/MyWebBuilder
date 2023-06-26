@@ -1,5 +1,7 @@
 package com.example.mywebbuilder.jsoupUtils;
 
+import android.util.Log;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,22 +13,29 @@ import java.util.HashMap;
 public class ComponentEditor {
 
     public static void applyEditedCss(HashMap<String, String> editedCss, String elementId, String filePath, String projectPath) {
+        if(editedCss.isEmpty()) return;
         try {
             File input = new File(filePath);
             Document doc = Jsoup.parse(input, "UTF-8");
 
             Element element = doc.getElementById(elementId);
             if (element != null) {
+                String existingStyle = element.attr("style");
+                StringBuilder updatedStyleBuilder = new StringBuilder(existingStyle);
+
                 for (String property : editedCss.keySet()) {
                     String value = editedCss.get(property);
-                    if (element.hasAttr("style")) {
-                        String existingStyle = element.attr("style");
-                        String updatedStyle = mergeStyles(existingStyle, property, value);
-                        element.attr("style", updatedStyle);
+                    String cssProperty = property.trim() + ": " + value.trim();
+
+                    if (existingStyle.contains(property + ":")) {
+                        updatedStyleBuilder = new StringBuilder(updatedStyleBuilder.toString().replaceAll(property + ":.*?;", cssProperty + ";"));
                     } else {
-                        element.attr("style", property + ": " + value);
+                        updatedStyleBuilder.append(cssProperty).append("; ");
                     }
                 }
+
+                String updatedStyle = updatedStyleBuilder.toString().trim();
+                element.attr("style", updatedStyle);
             }
 
             File projectFile = new File(projectPath);
@@ -54,6 +63,7 @@ public class ComponentEditor {
 
 
     public static void applyEditedHtml(HashMap<String, String> editedHtml, String elementId, String filePath, String projectPath) {
+        if(editedHtml.isEmpty()) return;
         try {
             File input = new File(filePath);
             Document doc = Jsoup.parse(input, "UTF-8");
@@ -114,10 +124,12 @@ public class ComponentEditor {
             existingStyle += "; " + property + ": " + value;
         }
 
-        // Reconstruct the updated style string
         StringBuilder updatedStyle = new StringBuilder();
-        for (String styleProperty : styleProperties) {
-            updatedStyle.append(styleProperty).append("; ");
+        for (int i = 0; i < styleProperties.length; i++) {
+            updatedStyle.append(styleProperties[i].trim());
+            if (i < styleProperties.length - 1) {
+                updatedStyle.append("; ");
+            }
         }
 
         return updatedStyle.toString().trim();

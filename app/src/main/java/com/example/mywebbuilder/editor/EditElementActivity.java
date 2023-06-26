@@ -199,7 +199,7 @@ public class EditElementActivity extends AppCompatActivity {
 
             String tagName = elementInfo.getString("tagName").toLowerCase(Locale.ROOT);
 
-            if ((tagName.equals("p") || tagName.equals("li") || tagName.startsWith("h")) && htmlProp.has("innerText")) {
+            if ((tagName.equals("p") || tagName.equals("li") || tagName.equals("a") || tagName.startsWith("h")) && htmlProp.has("innerText")) {
                 Pair<String, String> propertyPair = new Pair<>("innerText", htmlProp.getString("innerText"));
                 filteredStyleList.add(propertyPair);
             }

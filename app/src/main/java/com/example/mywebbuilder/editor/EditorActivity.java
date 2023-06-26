@@ -392,9 +392,11 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
         });
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onResume() {
         super.onResume();
+        editorRVAdapter.notifyDataSetChanged();
         registerReceiver(networkChangeReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
