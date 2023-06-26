@@ -12,6 +12,7 @@ public class ElementStyles {
         allowedProperties.add("background-color");
         allowedProperties.add("color");
         allowedProperties.add("font-size");
+        allowedProperties.add("text-align");
         allowedProperties.add("margin-top");
         allowedProperties.add("margin-bottom");
         allowedProperties.add("margin-left");

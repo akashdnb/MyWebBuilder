@@ -5,9 +5,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Pair;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -72,6 +75,8 @@ public class EditElementActivity extends AppCompatActivity {
             editedHtml.clear();
             binding.editWebView.reload();
         });
+        binding.duplicateBtn.setOnClickListener(v -> duplicateElement());
+        binding.deleteBtn.setOnClickListener(v -> deleteElement());
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -171,6 +176,45 @@ public class EditElementActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    public void duplicateElement(){
+        if(currentElementId == null){
+            Toast.makeText(this, "No element Selected!!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Clone Element")
+                .setMessage("The selected element will be cloned")
+                .setPositiveButton("Clone", (dialog, which) -> {
+                    ComponentEditor.duplicateElement(currentElementId, editComponent.getPreviewUrl(), projectPath);
+                    binding.editWebView.reload();
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    public void deleteElement(){
+        if(currentElementId == null){
+            Toast.makeText(this, "No element Selected!!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Delete Element!!")
+                .setMessage("The selected element will be permanently deleted")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    ComponentEditor.deleteElement(currentElementId, editComponent.getPreviewUrl(), projectPath);
+                    binding.editWebView.reload();
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
 
     void removeHighlight() {
         try {

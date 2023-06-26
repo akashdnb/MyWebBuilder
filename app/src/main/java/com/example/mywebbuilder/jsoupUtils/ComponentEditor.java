@@ -2,9 +2,12 @@ package com.example.mywebbuilder.jsoupUtils;
 
 import android.util.Log;
 
+import com.example.mywebbuilder.utils.KeyGenerator;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -221,6 +224,84 @@ public class ComponentEditor {
             e.printStackTrace();
         }
     }
+
+    public static void duplicateElement(String elementId, String filePath, String projectFilePath) {
+        try {
+            File file = new File(filePath);
+            Document doc = Jsoup.parse(file, "UTF-8");
+
+            File projectFile = new File(projectFilePath);
+            Document projectDoc = Jsoup.parse(projectFile, "UTF-8");
+
+            Element originalElement = doc.getElementById(elementId);
+            if (originalElement != null) {
+                Element duplicateElement = originalElement.clone();
+                String duplicateId = KeyGenerator.generateKey();
+                duplicateElement.attr("id", duplicateId);
+
+                generateUniqueIdsForChildElements(duplicateElement);
+                Element projectDuplicateElement = duplicateElement.clone();
+
+                originalElement.after(duplicateElement);
+
+                FileWriter writer = new FileWriter(file);
+                writer.write(doc.outerHtml());
+                writer.close();
+
+                Element projectOriginalElement = projectDoc.getElementById(elementId);
+                if (projectOriginalElement != null) {
+                    projectOriginalElement.after(projectDuplicateElement);
+                }
+
+                FileWriter projectWriter = new FileWriter(projectFile);
+                projectWriter.write(projectDoc.outerHtml());
+                projectWriter.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateUniqueIdsForChildElements(Element element) {
+        Elements children = element.children();
+        for (Element child : children) {
+            String uniqueId = KeyGenerator.generateKey();
+            child.attr("id", uniqueId);
+            generateUniqueIdsForChildElements(child); // Recursively generate unique IDs for child elements
+        }
+    }
+
+    public static void deleteElement(String elementId, String filePath, String projectFilePath) {
+        try {
+            File file = new File(filePath);
+            Document doc = Jsoup.parse(file, "UTF-8");
+
+            File projectFile = new File(projectFilePath);
+            Document projectDoc = Jsoup.parse(projectFile, "UTF-8");
+
+            Element element = doc.getElementById(elementId);
+            if (element != null) {
+                element.remove();
+
+                FileWriter writer = new FileWriter(file);
+                writer.write(doc.outerHtml());
+                writer.close();
+
+                Element projectElement = projectDoc.getElementById(elementId);
+                if (projectElement != null) {
+                    projectElement.remove();
+
+                    FileWriter projectWriter = new FileWriter(projectFile);
+                    projectWriter.write(projectDoc.outerHtml());
+                    projectWriter.close();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
 
     private static String mergeStyles(String existingStyle, String property, String value) {
