@@ -44,9 +44,9 @@ design visions to life
   
 ## Demo
 
-[![Demo Video](https://img.youtube.com/vi/ImLCGJPAYqw/maxresdefault.jpg)](https://youtu.be/ImLCGJPAYqw)
+[![Demo Video](https://img.youtube.com/vi/ggyAJo_8IpM/maxresdefault.jpg)](https://youtu.be/ggyAJo_8IpM)
 
-In the above section, you can find a demo video showcasing the functionality of the project. Simply click on the thumbnail image or follow this [YouTube link](https://youtu.be/ImLCGJPAYqw) to watch the demo.
+In the above section, you can find a demo video showcasing the functionality of the project. Simply click on the thumbnail image or follow this [YouTube link1](https://youtu.be/ggyAJo_8IpM) or [YouTube link2](https://youtu.be/ImLCGJPAYqw) to watch the demo.
 
 
 
