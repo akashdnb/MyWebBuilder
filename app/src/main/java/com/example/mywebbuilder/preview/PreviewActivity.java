@@ -1,29 +1,29 @@
 package com.example.mywebbuilder.preview;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.example.mywebbuilder.R;
 import com.example.mywebbuilder.databinding.ActivityPreviewBinding;
-import com.example.mywebbuilder.jsoupUtils.HTMLUtils;
-import com.example.mywebbuilder.utils.DirectoryUtil;
 
 import java.io.File;
 
 public class PreviewActivity extends AppCompatActivity {
     ActivityPreviewBinding binding;
-    HTMLUtils htmlUtils;
-    String newId= "header1", projectPath, projectName;
+    String projectPath, projectName;
     boolean isHTTPUrl = false;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -32,6 +32,8 @@ public class PreviewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityPreviewBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        setUpMenu();
 
         binding.backBtn.setOnClickListener(v -> finish());
         binding.webView.getSettings().setJavaScriptEnabled(true);
@@ -51,10 +53,6 @@ public class PreviewActivity extends AppCompatActivity {
         }else{
             Toast.makeText(this, "not exist", Toast.LENGTH_SHORT).show();
         }
-
-
-//        String filename = "index.html";
-//        File rootFile = new File(DirectoryUtil.rootProjects + "/" + "project1/index.html");
 
         WebSettings webSettings = binding.webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -78,39 +76,37 @@ public class PreviewActivity extends AppCompatActivity {
                 }
             }
         });
-
-//        File file = new File(DirectoryUtil.rootAssets + "/" + "headerDrawer/header1.html");
-//        File stylePath = new File(DirectoryUtil.rootAssets+ "/" +"headerDrawer/header1.css");
-//        File scriptPath = new File(DirectoryUtil.rootAssets+ "/" +"headerDrawer/header1.js");
-//        String filePath = file.getAbsolutePath();
-
-//        htmlUtils = new HTMLUtils(rootFile.getAbsolutePath(), this);
-//
-//        try {
-//            htmlUtils.addHTMLFile(filePath, "root", newId);
-//            htmlUtils.linkStyle(stylePath.getAbsolutePath(), newId);
-//            htmlUtils.linkScript(scriptPath.getAbsolutePath(), newId);
-//        } catch (Exception e) {
-//            Log.d("TAG", e.toString());
-//        }
-//
-//        if(file.exists()){
-//            binding.webView.loadUrl(rootFile.getAbsolutePath());
-//        }else{
-//            Toast.makeText(this, "not exist", Toast.LENGTH_SHORT).show();
-//        }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-//        try {
-//            htmlUtils.removeWithId(newId+"_css");
-//            htmlUtils.removeWithId(newId+"_script");
-//            htmlUtils.removeWithId(newId);
-//
-//        }catch (Exception e){
-//            Log.d("TAG", e.toString());
-//        }
+    private void setUpMenu() {
+        binding.menuMore.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(PreviewActivity.this, v);
+            popupMenu.inflate(R.menu.preview_menu);
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.open_in_browser:
+                        try {
+                            File file = new File(projectPath);
+                            Uri fileUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".fileprovider", file);
+
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(fileUri, "text/html");
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(intent);
+                        }catch (Exception e){
+                            Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                        return true;
+                    case R.id.save_file:
+                        Toast.makeText(PreviewActivity.this, "saved", Toast.LENGTH_SHORT).show();
+                        return true;
+                }
+                return false;
+            });
+            popupMenu.show();
+        });
+
     }
+
 }

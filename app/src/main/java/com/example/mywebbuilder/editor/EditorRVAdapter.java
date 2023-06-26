@@ -49,18 +49,19 @@ public class EditorRVAdapter extends RecyclerView.Adapter<EditorRVAdapter.ViewHo
     public void onBindViewHolder(@NonNull EditorRVAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         holder.webView.getSettings().setAllowFileAccess(true);
         holder.webView.getSettings().setAllowFileAccessFromFileURLs(true);
-        holder.webView.setWebViewClient(new WebViewClient(){
+        holder.webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                if(position == list.size()-1) ((EditorActivity)context).setProgressBarGone();
+                if (position == list.size() - 1) ((EditorActivity) context).setProgressBarGone();
             }
         });
 
         if (isCheckBoxVisible) holder.selectedShadow.setVisibility(View.VISIBLE);
         else holder.selectedShadow.setVisibility(View.GONE);
 
-        if(isSelectedAll || ((EditorActivity) context).selectedList.contains(position)) holder.checkbox.setImageResource(R.drawable.ic_check_box_24);
+        if (isSelectedAll || ((EditorActivity) context).selectedList.contains(position))
+            holder.checkbox.setImageResource(R.drawable.ic_check_box_24);
         else holder.checkbox.setImageResource(R.drawable.ic_check_box_blank_24);
 
         holder.webView.loadUrl(list.get(position).getPreviewUrl());
@@ -69,26 +70,26 @@ public class EditorRVAdapter extends RecyclerView.Adapter<EditorRVAdapter.ViewHo
                 @Override
                 public boolean onSingleTapConfirmed(MotionEvent e) {
                     try {
-                        if(!((EditorActivity) context).selectedList.isEmpty()){
-                            if(((EditorActivity) context).selectedList.contains(position)){
+                        if (!((EditorActivity) context).selectedList.isEmpty()) {
+                            if (((EditorActivity) context).selectedList.contains(position)) {
                                 isSelectedAll = false;
                                 ((EditorActivity) context).selectedList.remove(Integer.valueOf(position));
                                 ((EditorActivity) context).selectItem(position, -1);
-                            }else{
+                            } else {
                                 ((EditorActivity) context).selectedList.add(position);
                                 ((EditorActivity) context).selectItem(position, 1);
                             }
                             notifyItemChanged(position);
                         }
-                    }catch (Exception exp){
-                        Toast.makeText(context, ""+exp, Toast.LENGTH_SHORT).show();
+                    } catch (Exception exp) {
+                        Toast.makeText(context, "" + exp, Toast.LENGTH_SHORT).show();
                     }
                     return true;
                 }
 
                 @Override
                 public void onLongPress(@NonNull MotionEvent e) {
-                    if(((EditorActivity) context).selectedList.isEmpty()){
+                    if (((EditorActivity) context).selectedList.isEmpty()) {
                         isCheckBoxVisible = true;
                         ((EditorActivity) context).selectedList.add(position);
                         ((EditorActivity) context).selectItem(position, 1);
@@ -97,6 +98,7 @@ public class EditorRVAdapter extends RecyclerView.Adapter<EditorRVAdapter.ViewHo
                     super.onLongPress(e);
                 }
             });
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 gestureDetector.onTouchEvent(event);
@@ -104,6 +106,11 @@ public class EditorRVAdapter extends RecyclerView.Adapter<EditorRVAdapter.ViewHo
             }
 
         });
+
+        if (position == list.size() - 1)
+            holder.padding.setVisibility(View.VISIBLE);
+        else holder.padding.setVisibility(View.GONE);
+
     }
 
     @Override
@@ -123,6 +130,7 @@ public class EditorRVAdapter extends RecyclerView.Adapter<EditorRVAdapter.ViewHo
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnDragListener {
         WebView webView;
         ImageView checkbox;
+        View padding;
         ConstraintLayout addLine, selectedShadow;
         FrameLayout mainLayout;
 
@@ -133,6 +141,7 @@ public class EditorRVAdapter extends RecyclerView.Adapter<EditorRVAdapter.ViewHo
             mainLayout = itemView.findViewById(R.id.main_layout);
             selectedShadow = itemView.findViewById(R.id.select_shadow);
             checkbox = itemView.findViewById(R.id.check_box);
+            padding = itemView.findViewById(R.id.padding_last);
             webView.setOnDragListener(this);
         }
 

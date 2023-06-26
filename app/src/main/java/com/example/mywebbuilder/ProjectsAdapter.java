@@ -62,18 +62,15 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.ViewHo
             context.startActivity(intent);
         });
 
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setTitle("Delete Project !!");
-                builder.setMessage("Are you sure you want to delete "+ projectName+"?");
-                builder.setPositiveButton("Delete", (dialog, which) -> {
-                    deleteProject(position);
-                }).setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                builder.create().show();
-                return false;
-            }
+        holder.itemView.setOnLongClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Delete Project !!");
+            builder.setMessage("Are you sure you want to delete " + projectName + "?");
+            builder.setPositiveButton("Delete", (dialog, which) -> {
+                deleteProject(position);
+            }).setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            builder.create().show();
+            return false;
         });
     }
 
@@ -82,9 +79,8 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.ViewHo
         File file = new File(projectsList.get(position).getFilePath());
         File projectDir = file.getParentFile();
 
-        if(file.delete()){
-            assert projectDir != null;
-            projectDir.delete();
+        if (projectDir != null && DirectoryUtil.deleteFolder(projectDir.getAbsolutePath())) {
+            storageUtil.deleteProject(projectsList.get(position).getProjectName());
             projectsList.remove(position);
             storageUtil.setProjectList(projectsList);
             notifyItemRemoved(position);
@@ -105,7 +101,7 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.ViewHo
             super(itemView);
             projectTV = itemView.findViewById(R.id.project_name_tv);
             previewBtn = itemView.findViewById(R.id.preview_btn);
-            editBtn= itemView.findViewById(R.id.edit_btn);
+            editBtn = itemView.findViewById(R.id.edit_btn);
         }
     }
 }

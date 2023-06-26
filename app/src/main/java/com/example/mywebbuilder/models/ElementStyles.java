@@ -21,8 +21,8 @@ public class ElementStyles {
         allowedProperties.add("padding-bottom");
         allowedProperties.add("padding-left");
         allowedProperties.add("padding-right");
+        allowedProperties.add("box-shadow");
         allowedProperties.add("border-radius");
     }
-
 
 }

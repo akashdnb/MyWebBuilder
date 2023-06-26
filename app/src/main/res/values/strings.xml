@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MyWebBuilder</string>
+    <string name="open_in_browser">Open in Browser</string>
+    <string name="save_project_file">Save project file</string>
 </resources>

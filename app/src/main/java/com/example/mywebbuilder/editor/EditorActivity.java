@@ -295,6 +295,7 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
                 component.setPreviewUrl(componentPath+".html");
                 editorList.add(position, component);
                 editorRVAdapter.notifyItemInserted(position);
+                if(position == editorList.size()-1)editorRVAdapter.notifyItemChanged(position-1);
                 new StorageUtil(this).setHierarchy(projectName, editorList);
                 progressDialog.dismiss();
             });
@@ -420,7 +421,7 @@ public class EditorActivity extends AppCompatActivity implements DrawerListener,
     @Override
     public void onNetworkDisconnected() {
         isNetworkAvailable = false;
-//        binding.mainRv.setVisibility(View.GONE);
-//        binding.noConnLottie.setVisibility(View.VISIBLE);
+        binding.mainRv.setVisibility(View.GONE);
+        binding.noConnLottie.setVisibility(View.VISIBLE);
     }
 }

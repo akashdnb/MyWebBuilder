@@ -1,7 +1,5 @@
 package com.example.mywebbuilder.jsoupUtils;
 
-import android.util.Log;
-
 import com.example.mywebbuilder.utils.KeyGenerator;
 
 import org.jsoup.Jsoup;

@@ -55,6 +55,25 @@ public class DirectoryUtil {
         }
     }
 
+
+    public static boolean deleteFolder(String folderPath) {
+        File folder = new File(folderPath);
+        if (!folder.exists()) {
+            return true;
+        }
+        if (folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) deleteFolder(file.getAbsolutePath());
+                    else file.delete();
+                }
+            }
+        }
+        return folder.delete();
+    }
+
+
     private static File rootDir(){
         File dir;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)

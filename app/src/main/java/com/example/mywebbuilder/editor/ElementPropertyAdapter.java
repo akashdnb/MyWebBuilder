@@ -26,6 +26,7 @@ public class ElementPropertyAdapter extends RecyclerView.Adapter<ElementProperty
     Context context;
     ArrayList<Pair<String, String>> styleList;
     ArrayList<String> htmlProps = new ArrayList<>(Arrays.asList("innerText", "src", "href"));
+    ArrayList<String> sizeProps = new ArrayList<>(Arrays.asList("width", "height", "font-size", "margin-top", "margin-bottom", "margin-left", "margin-right", "padding-top", "padding-bottom", "padding-left", "padding-right", "border-radius"));
 
 
     public ElementPropertyAdapter(Context context, ArrayList<Pair<String, String>> styleList) {
@@ -47,13 +48,12 @@ public class ElementPropertyAdapter extends RecyclerView.Adapter<ElementProperty
         holder.propertyTv.setText(data.first);
         holder.valueEt.setText(data.second);
 
-        if(data.first.contains("color")){
+        if (data.first.contains("color")) {
             holder.valueEt.setKeyListener(null);
             String color = ColorConverter.convertToHex(data.second);
             holder.valueEt.setText(color);
             holder.valueEt.setOnClickListener(v -> createColorDialog(holder.valueEt, data.first, color));
-        }
-        else if(!htmlProps.contains(data.first)){
+        } else {
             holder.valueEt.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -67,17 +67,21 @@ public class ElementPropertyAdapter extends RecyclerView.Adapter<ElementProperty
 
                 @Override
                 public void afterTextChanged(Editable s) {
-                    String size = s.toString();
-                    if(isValidSize(size)){
+                    String inputValue = s.toString();
+                    if (htmlProps.contains(data.first)) {
+                        ((EditElementActivity) context).setEditedHtmlProperties(new Pair<>(data.first, s.toString()));
+                    } else if ((data.first.equals("text-align") && isValidTextAlign(inputValue)) ||
+                            (data.first.equals("box-shadow") && isValidBoxShadow(inputValue)) ||
+                            (sizeProps.contains(data.first) && isValidSize(inputValue))) {
                         holder.valueEt.setTextColor(Color.GREEN);
-                        ((EditElementActivity)context).setEditedCssProperties(new Pair<>(data.first, size));
-                    }else{
+                        ((EditElementActivity) context).setEditedCssProperties(new Pair<>(data.first, inputValue));
+                    } else {
                         holder.valueEt.setTextColor(Color.RED);
                     }
                 }
             });
         }
-        else {
+        {
             holder.valueEt.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -91,7 +95,7 @@ public class ElementPropertyAdapter extends RecyclerView.Adapter<ElementProperty
 
                 @Override
                 public void afterTextChanged(Editable s) {
-                    ((EditElementActivity)context).setEditedHtmlProperties(new Pair<>(data.first, s.toString()));
+                    ((EditElementActivity) context).setEditedHtmlProperties(new Pair<>(data.first, s.toString()));
                 }
             });
         }
@@ -100,15 +104,27 @@ public class ElementPropertyAdapter extends RecyclerView.Adapter<ElementProperty
     private void createColorDialog(EditText valueEt, String property, String color) {
         ColorPickerDialog colorPickerDialog = new ColorPickerDialog(context, ColorConverter.hexToInt(color), color1 -> {
             valueEt.setText(ColorConverter.intToHex(color1));
-            ((EditElementActivity)context).setEditedCssProperties(new Pair<>(property, ColorConverter.intToHex(color1)));
+            ((EditElementActivity) context).setEditedCssProperties(new Pair<>(property, ColorConverter.intToHex(color1)));
         });
         colorPickerDialog.show();
     }
 
     public boolean isValidSize(String value) {
         value = value.trim();
-        return value.matches("\\d+(\\.\\d+)?(px|em|%|rem|vw|vh|vmin|vmax|cm|mm|in|pt|pc)");
+        return value.matches("\\d+(\\.\\d+)?(px|em|%|rem|vw|vh|vmin|vmax|cm|mm|in|pt|pc)|auto|fit-content");
     }
+
+    public boolean isValidTextAlign(String value) {
+        value = value.trim();
+        return value.matches("(left|right|center|justify|start|end|match-parent)");
+    }
+
+    public boolean isValidBoxShadow(String value) {
+        value = value.trim();
+        String pattern = "^\\s*(?:\\w+\\s*)*(?:rgba?\\([^\\)]+\\)|[^\\s]+)\\s*\\d+px\\s*\\d+px\\s*\\d+px\\s*(?:\\d+px\\s*)?(?:rgba?\\([^\\)]+\\)|[^\\s]+)\\s*(?:,\\s*(?:\\w+\\s*)*(?:rgba?\\([^\\)]+\\)|[^\\s]+)\\s*\\d+px\\s*\\d+px\\s*\\d+px\\s*(?:\\d+px\\s*)?(?:rgba?\\([^\\)]+\\)|[^\\s]+)\\s*)*\\s*$";
+        return value.matches(pattern);
+    }
+
 
     @Override
     public int getItemCount() {
@@ -121,7 +137,7 @@ public class ElementPropertyAdapter extends RecyclerView.Adapter<ElementProperty
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            propertyTv= itemView.findViewById(R.id.property_tv);
+            propertyTv = itemView.findViewById(R.id.property_tv);
             valueEt = itemView.findViewById(R.id.value_et);
         }
     }

@@ -6,11 +6,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Pair;
-import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -157,7 +155,6 @@ public class EditElementActivity extends AppCompatActivity {
                 editedHtml.put(currentElementId, new HashMap<>());
             }
             Objects.requireNonNull(editedHtml.get(currentElementId)).put(property.first, property.second);
-
         }
         if(property.first.equals("innerText")){
             updateElementInnerText(property.second);
@@ -215,7 +212,6 @@ public class EditElementActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-
     void removeHighlight() {
         try {
             String javascriptCode = "var elements = document.getElementsByClassName('highlighted');" +
@@ -268,30 +264,22 @@ public class EditElementActivity extends AppCompatActivity {
                 filteredStyleList.add(propertyPair);
             }
 
-            Iterator<String> styleKeys = styleObject.keys();
             ArrayList<String> allowedProperties = ElementStyles.allowedProperties;
 
-            while (styleKeys.hasNext()) {
-                String property = styleKeys.next();
-
-                int index = allowedProperties.indexOf(property);
-                if (index != -1) {
-                    String value;
-                    try {
-                        value = styleObject.getString(property);
-                    } catch (JSONException e) {
-                        continue;
-                    }
-                    Pair<String, String> propertyPair = new Pair<>(property, value);
-                    filteredStyleList.add(propertyPair);
+            for(String property: allowedProperties){
+                if (styleObject.has(property)){
+                    filteredStyleList.add(new Pair<>(property, styleObject.getString(property)));
                 }
+                else filteredStyleList.add(new Pair<>(property, ""));
             }
+
             binding.elementTitle.setText("</" + currentElementTagName + "> ");
             setUpRecyclerview();
         } catch (Exception e) {
             Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void updateElementCssProperty(String propertyName, String propertyValue) {
         try {
@@ -332,8 +320,25 @@ public class EditElementActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if(editedCss.isEmpty() && editedHtml.isEmpty()) super.onBackPressed();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Save Progress?")
+                .setMessage("Your work has not been saved!")
+                .setPositiveButton("Save", (dialog, which) -> {
+                    binding.saveBtn.performClick();
+                    dialog.dismiss();
+                    super.onBackPressed();
+                })
+                .setNegativeButton("Don't Save", (dialog, which) -> {
+                    dialog.dismiss();
+                    super.onBackPressed();
+                });
 
-
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
 
     public class MyJavaScriptInterface {
         @JavascriptInterface

@@ -40,6 +40,10 @@ public class StorageUtil {
         return list;
     }
 
+    public void deleteProject(String projectName){
+        editor.remove(projectName);
+    }
+
     public void setProjectID(String projectName, String projectID){
         editor.putString(projectName, projectID);
         editor.apply();
